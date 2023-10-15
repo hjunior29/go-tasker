@@ -1,14 +1,37 @@
 package api
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/hjunior29/go-tasker/models"
 	"github.com/hjunior29/go-tasker/store"
 )
 
+// HomeQueueHandler get infos about API.
+func HomeQueueHandler(c *gin.Context) {
+	infoMessage := map[string]interface{}{
+		"*Welcome": map[string]string{
+			"message":   "Welcome to the Go-Tasker API!",
+			"version":   "1.0.0",
+			"timestamp": time.Now().Format(time.UnixDate),
+		},
+		"Docs": map[string]string{
+			"DockerHub": "https://hub.docker.com/r/hjunior29/go-tasker",
+			"GitHub":    "https://github.com/hjunior29/go-tasker",
+		},
+	}
+	c.JSON(200, infoMessage)
+}
+
 // InfoQueueHandler retrieves and returns various information about the task queue.
 func InfoQueueHandler(c *gin.Context) {
-	// Retrieve various pieces of information about the task queue from the database.
+	averageProcessingTime, err := store.GetAverageProcessingTime()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get average processing time tasks"})
+		return
+	}
+
 	totalTasks, err := store.GetTotalTasks()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to retrieve total tasks"})
@@ -45,15 +68,20 @@ func InfoQueueHandler(c *gin.Context) {
 		return
 	}
 
-	// Return the retrieved information as JSON.
 	c.JSON(200, gin.H{
-		"totalTasks":          totalTasks,
-		"totalProcessedTasks": totalProcessedTasks,
-		"totalPostRequests":   totalPostRequests,
-		"totalPutRequests":    totalPutRequests,
-		"totalFailedTasks":    totalFailedTasks,
-		"pendingTasks":        pendingTasks,
+		"tasksMetrics": gin.H{
+			"AverageProcessingTime": averageProcessingTime,
+			"total":                 totalTasks,
+			"processed":             totalProcessedTasks,
+			"failed":                totalFailedTasks,
+			"pending":               pendingTasks,
+		},
+		"requestTypes": gin.H{
+			"post": totalPostRequests,
+			"put":  totalPutRequests,
+		},
 	})
+
 }
 
 // EnqueueTaskHandler handles the enqueuing of a new task.

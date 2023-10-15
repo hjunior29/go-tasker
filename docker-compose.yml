@@ -12,8 +12,6 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data  
-    networks:
-      - network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -24,25 +22,21 @@ services:
       - "54321:80"
     depends_on:
       - db
-    networks:
-      - network
-
-  go-tasker:
+    
+  queue:
     build: .
+    environment:
+      DOCKER_ENV: true
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_SSLMODE: ${DB_SSLMODE}
     ports:
-      - 8080:8080
+      - "6143:6143"
     depends_on:
       - db
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    networks:
-      - network
 
 volumes:
   pgdata:
-
-networks:
-  network:
-    driver: bridge

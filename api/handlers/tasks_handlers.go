@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -70,13 +71,13 @@ func InfoQueueHandler(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"tasksMetrics": gin.H{
-			"AverageProcessingTime": averageProcessingTime,
+			"AverageProcessingTime": fmt.Sprintf("%.10f ms", averageProcessingTime),
 			"total":                 totalTasks,
 			"processed":             totalProcessedTasks,
 			"failed":                totalFailedTasks,
 			"pending":               pendingTasks,
 		},
-		"requestTypes": gin.H{
+		"tasksTypes": gin.H{
 			"post": totalPostRequests,
 			"put":  totalPutRequests,
 		},

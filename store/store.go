@@ -3,7 +3,6 @@ package store
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -168,32 +167,19 @@ func GetPendingTasks() (int64, error) {
 }
 
 // GetAverageProcessingTime will return the average processing duration in seconds
-func GetAverageProcessingTime() (time.Duration, error) {
-	var durations []float64
-	var sum float64
+func GetAverageProcessingTime() (float64, error) {
+	var result struct {
+		AverageTime float64
+	}
 
-	// Consulta para obter a diferença de tempo entre ProcessedAt e CreatedAt para cada tarefa
-	err := DB.Table("tasks_logs").
-		Where("processed_at IS NOT NULL").
-		Where("status = ?", "Sent Success").
-		Pluck("EXTRACT(EPOCH FROM (created_at - processed_at))", &durations).Error
-
+	err := DB.Raw(`
+		SELECT AVG(EXTRACT(EPOCH FROM (created_at - processed_at)) * 1000) AS average_time
+		FROM tasks_logs
+		WHERE processed_at IS NOT NULL
+		AND status = ?`, "Sent Success").Scan(&result).Error
 	if err != nil {
 		return 0, err
 	}
 
-	// if len(durations) == 0 {
-	//     return 0, errors.New("no durations found")
-	// }
-
-	// Calcula a média das durações
-	for _, duration := range durations {
-		sum += duration
-		log.Printf("Average %v", sum)
-	}
-	average := sum / 123
-
-	log.Printf("Average %v", (average))
-
-	return time.Duration(average) * time.Second, nil
+	return result.AverageTime, nil
 }

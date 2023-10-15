@@ -20,9 +20,7 @@ WORKDIR /
 
 COPY --from=build /main /main
 
-COPY . /
-
-EXPOSE 5000
+EXPOSE 6143
 
 USER root
 

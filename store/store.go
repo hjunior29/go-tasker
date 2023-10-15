@@ -3,6 +3,7 @@ package store
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -109,7 +110,11 @@ func LogTask(db *gorm.DB, taskID, payload, status, logMessage, logType, method, 
 // GetTotalTasks retrieves the total number of tasks from the database.
 func GetTotalTasks() (int64, error) {
 	var count int64
-	if err := DB.Model(&models.Tasks{}).Count(&count).Error; err != nil {
+	processed, err := GetTotalProcessedTasks()
+	failed, err := GetTotalFailedTasks()
+	pending, err := GetPendingTasks()
+	count = processed + failed + pending
+	if err != nil {
 		return 0, err
 	}
 	return count, nil
@@ -127,18 +132,20 @@ func GetTotalProcessedTasks() (int64, error) {
 // GetTotalPostRequests retrieves the total number of POST requests from the database.
 func GetTotalPostRequests() (int64, error) {
 	var count int64
-	if err := DB.Model(&models.TasksLogs{}).Where("method = ?", "POST").Count(&count).Error; err != nil {
+	if err := DB.Unscoped().Model(&models.Tasks{}).Where("method = ?", "POST").Count(&count).Error; err != nil {
 		return 0, err
 	}
+
 	return count, nil
 }
 
 // GetTotalPutRequests retrieves the total number of PUT requests from the database.
 func GetTotalPutRequests() (int64, error) {
 	var count int64
-	if err := DB.Model(&models.TasksLogs{}).Where("method = ?", "PUT").Count(&count).Error; err != nil {
+	if err := DB.Unscoped().Model(&models.Tasks{}).Where("method = ?", "PUT").Count(&count).Error; err != nil {
 		return 0, err
 	}
+
 	return count, nil
 }
 
@@ -160,3 +167,33 @@ func GetPendingTasks() (int64, error) {
 	return count, nil
 }
 
+// GetAverageProcessingTime will return the average processing duration in seconds
+func GetAverageProcessingTime() (time.Duration, error) {
+	var durations []float64
+	var sum float64
+
+	// Consulta para obter a diferença de tempo entre ProcessedAt e CreatedAt para cada tarefa
+	err := DB.Table("tasks_logs").
+		Where("processed_at IS NOT NULL").
+		Where("status = ?", "Sent Success").
+		Pluck("EXTRACT(EPOCH FROM (created_at - processed_at))", &durations).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	// if len(durations) == 0 {
+	//     return 0, errors.New("no durations found")
+	// }
+
+	// Calcula a média das durações
+	for _, duration := range durations {
+		sum += duration
+		log.Printf("Average %v", sum)
+	}
+	average := sum / 123
+
+	log.Printf("Average %v", (average))
+
+	return time.Duration(average) * time.Second, nil
+}

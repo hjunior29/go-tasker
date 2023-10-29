@@ -53,7 +53,7 @@ Contribuições são bem-vindas! Por favor, veja o CONTRIBUTING.md para mais det
 
 1. **Enfileirar uma tarefa**:
 
-   Para enfileirar uma tarefa, basta enviar uma requisição com o corpo apropriado:
+  Para enfileirar uma tarefa, basta enviar uma requisição com o corpo apropriado:
 
    ```json
    {
@@ -66,3 +66,13 @@ Contribuições são bem-vindas! Por favor, veja o CONTRIBUTING.md para mais det
      }
    }
    ```
+
+2. **Alterar número de workers** 
+
+  Para altera a quantidade de workers sobre a fila é necessário enviar essa requisição:
+
+  ```json
+  {
+    "workers": 3
+  }
+  ```

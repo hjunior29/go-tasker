@@ -33,7 +33,7 @@ func InitDatabase() error {
 		return err
 	}
 
-	DB.AutoMigrate(&models.Tasks{}, &models.TasksLogs{})
+	DB.AutoMigrate(&models.Tasks{}, &models.TasksLogs{}, &models.TasksConfig{})
 
 	return nil
 }
@@ -76,18 +76,6 @@ func EnqueueTask(task models.TasksRequest) error {
 	return nil
 }
 
-// DetermineScheduledTime
-func DetermineScheduledTime(minutesDelay int) *time.Time {
-	if minutesDelay == 0 {
-		return nil
-	}
-
-	delayDuration := time.Duration(minutesDelay) * time.Minute
-	scheduledTime := time.Now().Add(delayDuration)
-
-	return &scheduledTime
-}
-
 // DequeueTask retrieves and removes a task from the PostgreSQL queue using GORM.
 func DequeueTask() (*models.Tasks, error) {
 	var TasksRequest models.Tasks
@@ -102,6 +90,18 @@ func DequeueTask() (*models.Tasks, error) {
 	}
 
 	return &TasksRequest, nil
+}
+
+// DetermineScheduledTime
+func DetermineScheduledTime(minutesDelay int) *time.Time {
+	if minutesDelay == 0 {
+		return nil
+	}
+
+	delayDuration := time.Duration(minutesDelay) * time.Minute
+	scheduledTime := time.Now().Add(delayDuration)
+
+	return &scheduledTime
 }
 
 // LogTask records the details of a task processing attempt in the database.
@@ -200,4 +200,30 @@ func GetAverageProcessingTime() (float64, error) {
 	}
 
 	return result.AverageTime, nil
+}
+
+func GetConfig() (*models.TasksConfig, error) {
+	var config models.TasksConfig
+
+	if err := DB.Last(&config).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			defaultConfig := models.TasksConfig{Workers: 1}
+			if createErr := DB.Create(&defaultConfig).Error; createErr != nil {
+				return nil, createErr
+			}
+			return &defaultConfig, nil
+		}
+		return nil, err
+	}
+
+	return &config, nil
+}
+
+func UpdateConfig(newConfig models.TasksConfig) error {
+
+	if err := DB.Save(&newConfig).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -28,9 +28,16 @@ func main() {
 		log.Fatalf("Error initializing database: %v", err)
 	}
 
-	go worker.StartWorker()
-	go worker.StartWorker()
-	go worker.StartWorker()
+	tasksConfig, err := store.GetConfig()
+	if err != nil {
+		log.Fatalf("Error retrieving worker count from database: %v", err)
+	}
+
+	for i := 0; i < tasksConfig.Workers; i++ {
+	
+		go worker.StartWorker()
+		
+	}
 
 	port := os.Getenv("PORT")
 	if port == "" {

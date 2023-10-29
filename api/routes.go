@@ -12,6 +12,8 @@ func SetupRoutes() *gin.Engine {
 	r.GET("/", api.HomeQueueHandler)
 	r.GET("/info", api.InfoQueueHandler)
 	r.POST("/enqueue", api.EnqueueTaskHandler)
+	r.GET("/config", api.GetQueueConfigHandler)
+	r.POST("/config", api.UpdateQueueConfigHandler)
 
 	return r
 }

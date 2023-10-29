@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -99,4 +100,39 @@ func EnqueueTaskHandler(c *gin.Context) {
 	}
 
 	c.JSON(200, gin.H{"status": "Task enqueued successfully!"})
+}
+
+func GetQueueConfigHandler(c *gin.Context) {
+	config, err := store.GetConfig()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get configuration"})
+		return
+	}
+	c.JSON(200, gin.H{
+		"TasksConfigs": gin.H{
+			"workers": config.Workers,
+		},
+	})
+}
+
+func UpdateQueueConfigHandler(c *gin.Context) {
+	var config models.TasksConfig
+
+	if err := c.ShouldBindJSON(&config); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request body"})
+		return
+	}
+
+	if config.Workers <= 0 {
+		c.JSON(400, gin.H{"error": "Invalid number of workers"})
+		return
+	}
+
+	if err := store.UpdateConfig(config); err != nil {
+		c.JSON(500, gin.H{"error": "Failed to update configuration"})
+		return
+	}
+
+	c.JSON(200, gin.H{"status": "Configuration updated successfully!"})
+
 }

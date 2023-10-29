@@ -50,11 +50,15 @@ func EnqueueTask(task models.TasksRequest) error {
 		return err
 	}
 
+	// Determine the scheduled time for the task
+	scheduledTime := DetermineScheduledTime(task.ScheduledAt)
+
 	TasksRequest := models.Tasks{
-		TaskID:  taskID,
-		Payload: string(payloadBytes),
-		Method:  task.Method,
-		URL:     task.URL,
+		TaskID:      taskID,
+		Payload:     string(payloadBytes),
+		Method:      task.Method,
+		URL:         task.URL,
+		ScheduledAt: scheduledTime,
 	}
 
 	if err := DB.Create(&TasksRequest).Error; err != nil {
@@ -72,10 +76,24 @@ func EnqueueTask(task models.TasksRequest) error {
 	return nil
 }
 
+// DetermineScheduledTime
+func DetermineScheduledTime(minutesDelay int) *time.Time {
+	if minutesDelay == 0 {
+		return nil
+	}
+
+	delayDuration := time.Duration(minutesDelay) * time.Minute
+	scheduledTime := time.Now().Add(delayDuration)
+
+	return &scheduledTime
+}
+
 // DequeueTask retrieves and removes a task from the PostgreSQL queue using GORM.
 func DequeueTask() (*models.Tasks, error) {
 	var TasksRequest models.Tasks
-	if err := DB.Order("created_at asc").First(&TasksRequest).Error; err != nil {
+
+	query := DB.Where("(scheduled_at IS NULL) OR (scheduled_at <= ?)", time.Now()).Order("created_at asc")
+	if err := query.First(&TasksRequest).Error; err != nil {
 		return nil, err
 	}
 

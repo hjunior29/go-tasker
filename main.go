@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/hjunior29/go-tasker/api"
-	"github.com/hjunior29/go-tasker/store"
+	"github.com/hjunior29/go-tasker/db"
 	"github.com/hjunior29/go-tasker/worker"
 	"github.com/joho/godotenv"
 )
@@ -24,19 +24,17 @@ func loadenv() {
 func main() {
 	loadenv()
 
-	if err := store.InitDatabase(); err != nil {
+	if err := db.InitDatabase(); err != nil {
 		log.Fatalf("Error initializing database: %v", err)
 	}
 
-	tasksConfig, err := store.GetConfig()
+	tasksConfig, err := db.GetConfig()
 	if err != nil {
 		log.Fatalf("Error retrieving worker count from database: %v", err)
 	}
 
 	for i := 0; i < tasksConfig.Workers; i++ {
-	
 		go worker.StartWorker()
-		
 	}
 
 	port := os.Getenv("PORT")

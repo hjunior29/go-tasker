@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hjunior29/go-tasker/db"
 	"github.com/hjunior29/go-tasker/models"
-	"github.com/hjunior29/go-tasker/store"
 )
 
 // HomeQueueHandler get infos about API.
@@ -27,45 +27,51 @@ func HomeQueueHandler(c *gin.Context) {
 
 // InfoQueueHandler retrieves and returns various information about the task queue.
 func InfoQueueHandler(c *gin.Context) {
-	averageProcessingTime, err := store.GetAverageProcessingTime()
+	averageProcessingTime, err := db.GetAverageProcessingTime()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to get average processing time tasks"})
 		return
 	}
 
-	totalTasks, err := store.GetTotalTasks()
+	totalTasks, err := db.GetTotalTasks()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to retrieve total tasks"})
 		return
 	}
 
-	totalProcessedTasks, err := store.GetTotalProcessedTasks()
+	totalProcessedTasks, err := db.GetTotalProcessedTasks()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to retrieve total processed tasks"})
 		return
 	}
 
-	totalPostRequests, err := store.GetTotalPostRequests()
+	totalPostRequests, err := db.GetTotalPostRequests()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to retrieve total POST requests"})
 		return
 	}
 
-	totalPutRequests, err := store.GetTotalPutRequests()
+	totalPutRequests, err := db.GetTotalPutRequests()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to retrieve total PUT requests"})
 		return
 	}
 
-	totalFailedTasks, err := store.GetTotalFailedTasks()
+	totalFailedTasks, err := db.GetTotalFailedTasks()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to retrieve total failed tasks"})
 		return
 	}
 
-	pendingTasks, err := store.GetPendingTasks()
+	pendingTasks, err := db.GetPendingTasks()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to retrieve pending tasks"})
+		return
+	}
+
+	config, err := db.GetConfig()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Failed to get configuration"})
 		return
 	}
 
@@ -81,8 +87,10 @@ func InfoQueueHandler(c *gin.Context) {
 			"post": totalPostRequests,
 			"put":  totalPutRequests,
 		},
+		"tasksConfigs": gin.H{
+			"workers": config.Workers,
+		},
 	})
-
 }
 
 // EnqueueTaskHandler handles the enqueuing of a new task.
@@ -93,7 +101,7 @@ func EnqueueTaskHandler(c *gin.Context) {
 		return
 	}
 
-	if err := store.EnqueueTask(task); err != nil {
+	if err := db.EnqueueTask(task); err != nil {
 		c.JSON(500, gin.H{"error": "Failed to enqueue task"})
 		return
 	}
@@ -101,19 +109,21 @@ func EnqueueTaskHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "Task enqueued successfully!"})
 }
 
+// GetQueueConfigHandler retrieves the current configuration for the task queue.
 func GetQueueConfigHandler(c *gin.Context) {
-	config, err := store.GetConfig()
+	config, err := db.GetConfig()
 	if err != nil {
 		c.JSON(500, gin.H{"error": "Failed to get configuration"})
 		return
 	}
 	c.JSON(200, gin.H{
-		"TasksConfigs": gin.H{
+		"tasksConfigs": gin.H{
 			"workers": config.Workers,
 		},
 	})
 }
 
+// UpdateQueueConfigHandler updates the configuration for the task queue based on the provided input.
 func UpdateQueueConfigHandler(c *gin.Context) {
 	var config models.TasksConfig
 
@@ -127,7 +137,7 @@ func UpdateQueueConfigHandler(c *gin.Context) {
 		return
 	}
 
-	if err := store.UpdateConfig(config); err != nil {
+	if err := db.UpdateConfig(config); err != nil {
 		c.JSON(500, gin.H{"error": "Failed to update configuration"})
 		return
 	}

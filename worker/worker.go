@@ -7,15 +7,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hjunior29/go-tasker/db"
 	"github.com/hjunior29/go-tasker/models"
-	"github.com/hjunior29/go-tasker/store"
 )
 
 // Initializes the worker to process tasks.
 // It continuously dequeues tasks and processes them.
 func StartWorker() {
 	for {
-		TasksRequest, err := store.DequeueTask()
+		TasksRequest, err := db.DequeueTask()
 		if err != nil {
 			time.Sleep(1 * time.Second)
 			continue
@@ -36,21 +36,21 @@ func processTask(Tasks *models.Tasks) {
 	if err != nil {
 		status := "Sent Failed"
 		logMessage = fmt.Sprintf("Error unmarshalling TasksRequest: %v", err)
-		store.LogTask(store.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
+		db.LogTask(db.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
 		return
 	}
 
 	if Tasks.URL == "" {
 		status = "Sent Failed"
 		logMessage = "URL is empty"
-		store.LogTask(store.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
+		db.LogTask(db.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
 		return
 	}
 
 	if Tasks.Method == "" {
 		status = "Sent Failed"
 		logMessage = "Method is empty"
-		store.LogTask(store.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
+		db.LogTask(db.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
 		return
 	}
 
@@ -58,7 +58,7 @@ func processTask(Tasks *models.Tasks) {
 	if err != nil {
 		status = "Sent Failed"
 		logMessage = fmt.Sprintf("Error marshalling payload: %v", err)
-		store.LogTask(store.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
+		db.LogTask(db.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
 		return
 	}
 
@@ -66,17 +66,17 @@ func processTask(Tasks *models.Tasks) {
 	if err != nil {
 		status = "Sent Failed"
 		logMessage = fmt.Sprintf("Error creating HTTP request: %v", err)
-		store.LogTask(store.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
+		db.LogTask(db.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
 		return
 	}
+	
 	req.Header.Set("Content-Type", "application/json")
-
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		status = "Sent Failed"
 		logMessage = fmt.Sprintf("Error sending HTTP request: %v", err)
-		store.LogTask(store.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
+		db.LogTask(db.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
 		return
 	}
 	defer resp.Body.Close()
@@ -89,5 +89,5 @@ func processTask(Tasks *models.Tasks) {
 		logMessage = fmt.Sprintf("HTTP Response Status: %v", resp.Status)
 	}
 
-	store.LogTask(store.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
+	db.LogTask(db.DB, Tasks.TaskID, Tasks.Payload, status, logMessage, logType, Tasks.Method, Tasks.URL, time.Now())
 }

@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"

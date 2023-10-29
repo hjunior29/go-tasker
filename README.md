@@ -1,6 +1,47 @@
 # go-task
 
-`go-task` é uma solução de fila de push desenvolvida para agilizar e otimizar o gerenciamento de tarefas em sistemas distribuídos. Com o `go-task`, você pode enfileirar tarefas para serem executadas por meio de requisições POST ou PUT, com a opção de agendar a execução de uma tarefa em um horário específico.
+go-tasker é uma solução construída em Go para gerenciar e processar tarefas em fila. Ele oferece uma API RESTful para adicionar tarefas, com a opção de agendar a execução de uma tarefa em um horário específico, atualizar configurações, e muito mais.
+
+## Sumário
+
+- [Instalação](#instalação)
+- [Uso](#uso)
+- [Configuração](#configuração)
+- [Contribuições](#contribuições)
+- [Licença](#licença)
+
+## Instalação
+
+1. Instale o Go (certifique-se de ter a versão mais recente).
+2. Clone este repositório:
+
+   `git clone https://github.com/hjunior29/go-tasker`
+
+3. Navegue até a pasta do projeto:
+
+   `cd go-tasker`
+
+4. Instale as dependências necessárias:
+
+   go mod download
+
+## Uso
+
+(completar aqui com instruções específicas sobre como executar, usar endpoints etc.)
+
+## Configuração
+
+1. Configuração de Timezone:
+
+   Para configurar a timezone para São Paulo, edite a string de conexão no arquivo de configuração.
+
+2. Outras configurações:
+
+   (completar aqui com detalhes adicionais sobre configuração do projeto, como configurações de banco de dados, variáveis de ambiente, etc.)
+
+## Contribuições
+
+Contribuições são bem-vindas! Por favor, veja o CONTRIBUTING.md para mais detalhes.
 
 ## Características
 

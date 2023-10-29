@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -137,11 +138,21 @@ func UpdateQueueConfigHandler(c *gin.Context) {
 		return
 	}
 
+	tasksConfig, err := db.GetConfig()
+	if err != nil {
+		log.Fatalf("Error retrieving worker count from database: %v", err)
+	}
+	
+	if config.Workers == tasksConfig.Workers {
+		c.JSON(400, gin.H{"status": "The specified number of workers is already the current configuration."})
+		return
+	}
+
 	if err := db.UpdateConfig(config); err != nil {
 		c.JSON(500, gin.H{"error": "Failed to update configuration"})
 		return
 	}
 
-	c.JSON(200, gin.H{"status": "Configuration updated successfully!"})
+	c.JSON(200, gin.H{"status": "Configuration updated successfully! Please restart the project to apply the changes."})
 
 }

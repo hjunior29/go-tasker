@@ -21,7 +21,7 @@
 go.work
 
 # Go env
-.env
+*.env
 
-# VSCode
-.vscode/
+# VSCode config
+*launch.json
